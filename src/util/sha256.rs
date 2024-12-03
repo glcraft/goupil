@@ -101,16 +101,16 @@ pub fn sha256(buffer: &[u8]) -> [u8; 32] {
             values[7] = values[6];
             values[6] = values[5];
             values[5] = values[4];
-            values[4] = values[3] + temp1;
+            values[4] = values[3].overflowing_add(temp1).0;
             values[3] = values[2];
             values[2] = values[1];
             values[1] = values[0];
-            values[0] = temp1 + temp2;
+            values[0] = temp1.overflowing_add(temp2).0;
         }
         hashes
             .iter_mut()
             .zip(values.into_iter())
-            .for_each(|(x, c)| x.add_assign(c));
+            .for_each(|(x, c)| *x = x.overflowing_add(c).0);
     }
     // let result = [0; 32];
     hashes
