@@ -1,4 +1,4 @@
-use std::{mem::MaybeUninit, sync::LockResult};
+use std::{io::Bytes, mem::MaybeUninit, ops::AddAssign, sync::LockResult};
 
 ///! sha256 implementation
 ///! https://fr.wikipedia.org/wiki/SHA-2
@@ -60,18 +60,69 @@ pub fn fill_bits<const N: u32>(buffer: &[u8]) -> Vec<u8> {
 }
 pub fn sha256(buffer: &[u8]) -> [u8; 32] {
     const BLOCK_BYTES: usize = 512 / 8;
-    let result = INITIALIZATION.clone();
+    let mut hashes = INITIALIZATION.clone();
     let msg = fill_bits::<512>(buffer);
     for ibuf in 0..=(buffer.len() / BLOCK_BYTES) {
         let part = &msg[(ibuf * BLOCK_BYTES)..((ibuf + 1) * BLOCK_BYTES)];
-        let w: [u32; 64] = unsafe {
-            let mut w = MaybeUninit::uninit();
-            for i in 0..15 {
-                w[i] = u32::from_be_bytes(part[(i * 4)..((i + 1) * 4)]);
+        let w: [u32; 64] = {
+            let mut w: [u32; 64] = [0; 64];
+            for i in 0..16 {
+                let part4 = &part[(i * 4)..((i + 1) * 4)];
+                let array: [u8; 4] = part4.try_into().expect("incorrect slice size");
+                w[i] = u32::from_be_bytes(array);
+            }
+            for i in 16..64 {
+                w[i] = theta1(w[i - 2])
+                    .overflowing_add(w[i - 7])
+                    .0
+                    .overflowing_add(theta0(w[i - 15]))
+                    .0
+                    .overflowing_add(w[i - 16])
+                    .0;
             }
 
             w
         };
+        let mut values = hashes.clone();
+
+        for t in 0..64 {
+            let temp1 = values[7]
+                .overflowing_add(sum1(values[4]))
+                .0
+                .overflowing_add(ch(values[4], values[5], values[6]))
+                .0
+                .overflowing_add(CONSTANTS[t])
+                .0
+                .overflowing_add(w[t])
+                .0;
+            let temp2 = sum0(values[0])
+                .overflowing_add(maj(values[0], values[1], values[2]))
+                .0;
+            values[7] = values[6];
+            values[6] = values[5];
+            values[5] = values[4];
+            values[4] = values[3] + temp1;
+            values[3] = values[2];
+            values[2] = values[1];
+            values[1] = values[0];
+            values[0] = temp1 + temp2;
+        }
+        hashes
+            .iter_mut()
+            .zip(values.into_iter())
+            .for_each(|(x, c)| x.add_assign(c));
     }
-    todo!()
+    // let result = [0; 32];
+    hashes
+        .into_iter()
+        .enumerate()
+        .fold([0; 32], |mut acc, (i, hash)| {
+            let bytes = hash.to_be_bytes();
+
+            acc[i * 4 + 0] = bytes[0];
+            acc[i * 4 + 1] = bytes[1];
+            acc[i * 4 + 2] = bytes[2];
+            acc[i * 4 + 3] = bytes[3];
+            acc
+        })
 }
