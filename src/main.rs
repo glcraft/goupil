@@ -12,7 +12,7 @@ fn main() {
     // println!("{}", txt);
     let buffer = text.as_bytes();
     // println!("{}", util::base64::url_encode(&buffer))
-    let hash = util::sha256::sha256(buffer);
+    let hash = util::sha::sha256(buffer);
     // println!("{:?}", filled);
     // println!("{} bits", filled.len() * 8);
     println!(
