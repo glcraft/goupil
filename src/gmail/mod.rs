@@ -1,4 +1,4 @@
-use crate::util;
+use crate::{util, api::ApiConfig};
 use rand::distributions::{DistString, Distribution};
 
 struct CodeVerifier;
@@ -32,7 +32,23 @@ impl CodeVerifier {
         util::base64::url_encode(&util::sha::sha256(&Self::generate().into_bytes()))
     }
 }
-pub fn get_credentials() {
+fn wait_oauth2() -> String {
+    for port in 3000..3100 {
+        match tiny_http::Server::http(format!("0.0.0.0:{}", port)) {
+            Ok(server) => server,
+            Err(tiny_http::)
+        }
+    }
+}
+pub fn get_credentials(api_config: &ApiConfig) {
     let code_verifier = CodeVerifier::generate_sha256();
     println!("test code_verif: {}", code_verifier);
+    let forms = [
+        ("client_id", api_config.gmail.client_id),
+        ("redirect_uri", format!("http://127.0.0.1:{}", port)),
+        ("response_type", "code".to_string()),
+        ("scope", "https://www.googleapis.com/auth/gmail.readonly"),
+        ("code_challenge", code_verifier),
+        ("code_challenge_method", "S256".to_string()),
+    ];
 }
