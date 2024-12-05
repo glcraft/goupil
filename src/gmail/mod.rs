@@ -1,4 +1,6 @@
-use crate::{util, api::ApiConfig};
+use std::collections::HashMap;
+
+use crate::{api::ApiConfig, oauth2, util};
 use rand::distributions::{DistString, Distribution};
 
 struct CodeVerifier;
@@ -32,23 +34,27 @@ impl CodeVerifier {
         util::base64::url_encode(&util::sha::sha256(&Self::generate().into_bytes()))
     }
 }
-fn wait_oauth2() -> String {
-    for port in 3000..3100 {
-        match tiny_http::Server::http(format!("0.0.0.0:{}", port)) {
-            Ok(server) => server,
-            Err(tiny_http::)
-        }
-    }
-}
+// fn wait_oauth2() -> String {
+//     for port in 3000..3100 {
+//         match tiny_http::Server::http(format!("0.0.0.0:{}", port)) {
+//             Ok(server) => server,
+//             Err(tiny_http::)
+//         }
+//     }
+// }
 pub fn get_credentials(api_config: &ApiConfig) {
+    let port: String = todo!();
     let code_verifier = CodeVerifier::generate_sha256();
     println!("test code_verif: {}", code_verifier);
-    let forms = [
-        ("client_id", api_config.gmail.client_id),
-        ("redirect_uri", format!("http://127.0.0.1:{}", port)),
-        ("response_type", "code".to_string()),
-        ("scope", "https://www.googleapis.com/auth/gmail.readonly"),
-        ("code_challenge", code_verifier),
-        ("code_challenge_method", "S256".to_string()),
-    ];
+    let mut params = HashMap::new();
+    params.insert("client_id", api_config.gmail.client_id);
+    params.insert("redirect_uri", format!("http://127.0.0.1:{}", port));
+    params.insert("response_type", "code".to_string());
+    params.insert(
+        "scope",
+        "https://www.googleapis.com/auth/gmail.readonly".to_string(),
+    );
+    params.insert("code_challenge", code_verifier);
+    params.insert("code_challenge_method", "S256".to_string());
+    oauth2::get_credentials("", params);
 }
