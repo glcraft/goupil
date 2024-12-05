@@ -3,9 +3,11 @@
 //mod commands;
 mod api;
 mod gmail;
+mod oauth2;
 mod terminal;
 mod util;
 
 fn main() {
-    gmail::get_credentials();
+    let api_config = api::ApiConfig::load();
+    gmail::get_credentials(&api_config);
 }
