@@ -45,13 +45,15 @@ impl<S1: AsRef<str>, S2: AsRef<str>> IntoUrlEncoded for HashMap<S1, S2> {
     fn into_url_encoded(&self) -> String {
         let output_len: usize = self.keys().map(|s| s.as_ref().len()).sum::<usize>()
             + self.values().map(|v| self::len(v.as_ref())).sum::<usize>()
-            + (self.len() + 1);
+            + (self.len());
         let mut output = String::with_capacity(output_len);
         for (k, v) in self.iter() {
-            output.push_str(k.as_ref());
+            output.push_str(k.as_ref()); // we admit that keys are url friendly
             output.push('=');
             self::encode_inplace(v.as_ref(), &mut output);
+            output.push('&');
         }
+        output.pop(); // pop last '&'
         output
     }
 }
