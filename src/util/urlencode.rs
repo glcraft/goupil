@@ -1,10 +1,27 @@
+use crate::util;
 use std::collections::HashMap;
+
+use reqwest::Url;
+
+trait IsUrlEncodeFriendly: Copy {
+    fn is_urlencode_friendly(self) -> bool;
+}
+impl IsUrlEncodeFriendly for char {
+    fn is_urlencode_friendly(self) -> bool {
+        self.is_ascii_alphanumeric() || "-_.!~*'()".contains(self)
+    }
+}
+impl IsUrlEncodeFriendly for u8 {
+    fn is_urlencode_friendly(self) -> bool {
+        self.is_ascii_alphanumeric() || b"-_.!~*'()".contains(&self)
+    }
+}
 
 pub fn len(input: &str) -> usize {
     input
         .chars()
         .map(|c| {
-            if c.is_ascii_alphanumeric() {
+            if c.is_urlencode_friendly() {
                 1
             } else {
                 c.len_utf8() * 3
@@ -16,7 +33,7 @@ pub fn encode_inplace(input: &str, output: &mut String) {
     let output_len = len(input);
     output.reserve(output_len);
     for c in input.chars() {
-        if c.is_ascii_alphanumeric() {
+        if c.is_urlencode_friendly() {
             output.push(c);
             continue;
         }
