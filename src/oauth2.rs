@@ -43,5 +43,5 @@ fn open_url(url: &str) -> Result<(), &'static str> {
 pub fn get_credentials(url: &str, mut params: HashMap<&'static str, String>) {
     let (port, server) = make_oauth_server();
     params.insert("redirect_uri", format!("http://127.0.0.1:{}", port));
-    open_url(&format!("{}/{}", url, params.into_url_encoded()));
+    open_url(&format!("{}?{}", url, params.into_url_encoded()))
 }
