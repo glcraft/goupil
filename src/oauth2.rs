@@ -20,6 +20,7 @@ fn make_oauth_server() -> (u16, Server) {
 ///
 /// Inspired from https://docs.rs/open/latest/open/
 fn open_url(url: &str) -> Result<(), &'static str> {
+    println!("Opening {}", url);
     if cfg!(target_os = "linux") {
         for command in &[
             &["wslview", url] as &[&str],
@@ -33,9 +34,11 @@ fn open_url(url: &str) -> Result<(), &'static str> {
             }
         }
     } else if cfg!(target_os = "windows") {
+        todo!();
     } else if cfg!(target_os = "macos") {
+        todo!();
     } else {
-        println!("unable to open an url in a browser. Please open this url in a browser to connect to google : {}", url);
+        println!("Unable to open an url in a browser with your device. Please open this url in a browser to connect to google : {}", url);
     }
     Err("unable to open url in a browser")
 }
@@ -44,4 +47,9 @@ pub fn get_credentials(url: &str, mut params: HashMap<&'static str, String>) {
     let (port, server) = make_oauth_server();
     params.insert("redirect_uri", format!("http://127.0.0.1:{}", port));
     open_url(&format!("{}?{}", url, params.into_url_encoded()))
+        .expect("unable to open url in a browser");
+    match server.recv() {
+        Ok(req) => println!("=== Receive : {:#?}", req),
+        Err(e) => eprintln!("=== Error: {:#?}", e),
+    }
 }
