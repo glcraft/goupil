@@ -31,7 +31,11 @@ impl CodeVerifier {
         Self::sample_string(&CodeVerifier, &mut rng, 128)
     }
     pub fn generate_sha256() -> String {
-        util::base64::url_encode(&util::sha::sha256(&Self::generate().into_bytes()))
+        // let sha_code = util::sha::sha256(&Self::generate().into_bytes());
+        let mut b64encoded =
+            util::base64::url_encode(&util::sha::sha256(&Self::generate().into_bytes()));
+        b64encoded.pop(); // drop the = fill
+        b64encoded
     }
 }
 // fn wait_oauth2() -> String {
