@@ -1,8 +1,10 @@
-use std::collections::HashMap;
-
+use crate::hashmap;
 use crate::{api::ApiConfig, oauth2, util};
 use rand::distributions::{DistString, Distribution};
 
+/// Code challeng generator
+///
+/// From [the definition of Google](https://developers.google.com/identity/protocols/oauth2/native-app?hl=fr#step1-code-verifier)
 struct CodeVerifier;
 
 impl rand::distributions::Distribution<u8> for CodeVerifier {
@@ -47,18 +49,16 @@ impl CodeVerifier {
 //     }
 // }
 pub fn get_credentials(api_config: &ApiConfig) {
-    let port: String = todo!();
     let code_verifier = CodeVerifier::generate_sha256();
-    println!("test code_verif: {}", code_verifier);
-    let mut params = HashMap::new();
-    params.insert("client_id", api_config.gmail.client_id);
-    params.insert("redirect_uri", format!("http://127.0.0.1:{}", port));
-    params.insert("response_type", "code".to_string());
-    params.insert(
-        "scope",
-        "https://www.googleapis.com/auth/gmail.readonly".to_string(),
-    );
-    params.insert("code_challenge", code_verifier);
-    params.insert("code_challenge_method", "S256".to_string());
-    oauth2::get_credentials("", params);
+    let params = hashmap! {
+        ("cliend_id", api_config.gmail.client_id.clone()),
+        ("response_type", "code".to_string()),
+        (
+            "scope",
+            "https://www.googleapis.com/auth/gmail.readonly".to_string(),
+        ),
+        ("code_challenge", code_verifier),
+        ("code_challenge_method", "S256".to_string()),
+    };
+    oauth2::get_credentials("https://accounts.google.com/o/oauth2/v2/auth", params);
 }
