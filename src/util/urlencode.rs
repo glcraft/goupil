@@ -74,3 +74,46 @@ impl<S1: AsRef<str>, S2: AsRef<str>> IntoUrlEncoded for HashMap<S1, S2> {
         output
     }
 }
+
+pub fn decode(input: &str) -> String {
+    let mut it = input.chars();
+    let mut output = Vec::with_capacity(input.len());
+    loop {
+        let c = match it.next() {
+            Some(c) => c,
+            None => return String::from_utf8(output).expect("invalide string in url parameters"),
+        };
+        if util::likely(c != '%') {
+            assert!(c.is_ascii(), "url only expect ascii characters");
+            output.push(c as u8);
+            continue;
+        }
+        let c = it.next().expect("expect a char here");
+        if util::unlikely(c == '%') {
+            output.push(c as u8);
+            continue;
+        }
+        let n = (c.to_digit(16).expect("expect two hex number after a %") << 4)
+            + it.next()
+                .expect("expect two hex number after a %")
+                .to_digit(16)
+                .expect("expect two hex number after a %");
+        output.push(n as u8);
+    }
+}
+pub fn decode_url(mut url: &str) -> Option<HashMap<&str, String>> {
+    let mut cursor = url.find('?')? + 1;
+    let mut result = HashMap::new();
+    // let mut url = &url[cursor..];
+    while let Some(end_index) = url.find('&') {
+        let param = &url[cursor..end_index];
+        let eq = param.find('=').expect("param without equal");
+        result.insert(&param[0..eq], decode(&param[(eq + 1)..]));
+        cursor = end_index + 1;
+        url = &url[cursor..];
+    }
+    if let Some(eq) = url.find('=') {
+        result.insert(&url[0..eq], url[(eq + 1)..].to_string());
+    }
+    Some(result)
+}
