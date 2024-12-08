@@ -1,4 +1,5 @@
-use crate::util::urlencode::IntoUrlEncoded;
+use crate::util::{self, urlencode::IntoUrlEncoded};
+use core::{panic, str::next_code_point};
 use std::{collections::HashMap, process::Command};
 
 use tiny_http::{Request, Response, Server};
@@ -43,13 +44,34 @@ fn open_url(url: &str) -> Result<(), &'static str> {
     Err("unable to open url in a browser")
 }
 
-pub fn get_credentials(url: &str, mut params: HashMap<&'static str, String>) {
+pub fn get_auth_code(url: &str, mut params: HashMap<&'static str, String>) -> String {
     let (port, server) = make_oauth_server();
     params.insert("redirect_uri", format!("http://127.0.0.1:{}", port));
     open_url(&format!("{}?{}", url, params.into_url_encoded()))
         .expect("unable to open url in a browser");
-    match server.recv() {
-        Ok(req) => println!("=== Receive : {:#?}", req),
-        Err(e) => eprintln!("=== Error: {:#?}", e),
-    }
+    let code = match server.recv() {
+        Ok(req) => {
+            let url = req.url();
+            let params = util::urlencode::decode_url_parameters(url)
+                .expect("no parameters obtained by oauth2 service");
+            if let Some(error) = params.get("error") {
+                match error.as_str() {
+                    "access_denied" => panic!("The user denied the request."),
+                    e => panic!("An error happened while authentifying the user: {}", e),
+                }
+            }
+            params.get("code").expect("\"code\" donc exists").clone()
+        }
+        Err(e) => panic!("oauth client got an issue: {:?}", e),
+    };
+    code
+}
+pub fn get_token(host: &str, mut params: HashMap<&'static str, String>) -> String {
+    params.insert("grant_type", "authorization_code".to_string());
+    let client = reqwest::blocking::Client::new();
+    let resp = client
+        .post(host)
+        .form(&params)
+        .send()
+        .expect("An error occured while ");
 }

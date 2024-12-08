@@ -101,7 +101,7 @@ pub fn decode(input: &str) -> String {
         output.push(n as u8);
     }
 }
-pub fn decode_url(mut url: &str) -> Option<HashMap<&str, String>> {
+pub fn decode_url_parameters(mut url: &str) -> Option<HashMap<&str, String>> {
     let mut cursor = url.find('?')? + 1;
     let mut result = HashMap::new();
     // let mut url = &url[cursor..];

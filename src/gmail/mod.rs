@@ -50,15 +50,23 @@ impl CodeVerifier {
 // }
 pub fn get_credentials(api_config: &ApiConfig) {
     let code_verifier = CodeVerifier::generate_sha256();
+    let client_id = &api_config.gmail.client_id;
     let params = hashmap! {
-        ("cliend_id", api_config.gmail.client_id.clone()),
+        ("cliend_id", client_id.clone()),
         ("response_type", "code".to_string()),
         (
             "scope",
             "https://www.googleapis.com/auth/gmail.readonly".to_string(),
         ),
-        ("code_challenge", code_verifier),
+        ("code_challenge", code_verifier.clone()),
         ("code_challenge_method", "S256".to_string()),
     };
-    oauth2::get_credentials("https://accounts.google.com/o/oauth2/v2/auth", params);
+    let code = oauth2::get_auth_code("https://accounts.google.com/o/oauth2/v2/auth", params);
+    let params = hashmap![
+        ("code", code),
+        ("client_id", client_id.clone()),
+        ("code_verifier", code_verifier),
+    ];
+    let token = oauth2::get_token("https://oauth2.googleapis.com/token", params);
+    println!("token: {}", token);
 }
