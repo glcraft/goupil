@@ -1,7 +1,10 @@
 use crate::util::{self, urlencode::IntoUrlEncoded};
-use core::{panic, str::next_code_point};
-use std::{collections::HashMap, process::Command};
+use core::panic;
+use std::{any::Any, collections::HashMap, process::Command};
 
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+use serde_yml::with::singleton_map::SerializeTupleVariantAsSingletonMap;
 use tiny_http::{Request, Response, Server};
 
 /// Make a mini server for OAuth2 redirection
@@ -66,12 +69,46 @@ pub fn get_auth_code(url: &str, mut params: HashMap<&'static str, String>) -> St
     };
     code
 }
-pub fn get_token(host: &str, mut params: HashMap<&'static str, String>) -> String {
+#[derive(Deserialize)]
+struct OAuth2TokenResponse {
+    access_token: String,
+    expires_in: i64,
+    // id_token: Option<String>,
+    refresh_token: String,
+    scope: String,
+    token_type: String,
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug)]
+pub struct OAuth2Token {
+    pub access_token: String,
+    pub refresh_token: String,
+    pub expiration_date: DateTime<Utc>,
+}
+
+impl From<OAuth2TokenResponse> for OAuth2Token {
+    fn from(value: OAuth2TokenResponse) -> Self {
+        Self {
+            access_token: value.access_token,
+            refresh_token: value.refresh_token,
+            expiration_date: Utc::now() + chrono::Duration::seconds(value.expires_in),
+        }
+    }
+}
+
+pub fn get_token(host: &str, mut params: HashMap<&'static str, String>) -> OAuth2Token {
     params.insert("grant_type", "authorization_code".to_string());
     let client = reqwest::blocking::Client::new();
     let resp = client
         .post(host)
         .form(&params)
         .send()
-        .expect("An error occured while ");
+        .expect("An error occured during token exchange");
+    let resp_text = resp.text();
+    println!("oauth token rew response: {:?}", resp_text);
+    todo!()
+    // let resp = resp_text
+    //     .json::<OAuth2TokenResponse>()
+    //     .expect("oauth2 token malformed response");
+    // resp.into()
 }

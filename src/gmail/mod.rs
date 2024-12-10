@@ -65,8 +65,9 @@ pub fn get_credentials(api_config: &ApiConfig) {
     let params = hashmap![
         ("code", code),
         ("client_id", client_id.clone()),
+        ("client_secret", api_config.gmail.client_secret.clone()),
         ("code_verifier", code_verifier),
     ];
     let token = oauth2::get_token("https://oauth2.googleapis.com/token", params);
-    println!("token: {}", token);
+    println!("token: {:?}", token);
 }
