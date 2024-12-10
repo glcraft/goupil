@@ -1,9 +1,9 @@
 #![feature(ascii_char)]
 
 //mod commands;
-mod api;
 mod gmail;
 mod oauth2;
+mod secrets;
 mod terminal;
 mod util;
 
