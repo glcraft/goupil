@@ -1,5 +1,5 @@
 use crate::hashmap;
-use crate::{api::ApiConfig, oauth2, util};
+use crate::{oauth2, secrets::ApiConfig, util};
 use rand::distributions::{DistString, Distribution};
 
 /// Code challeng generator
@@ -52,7 +52,7 @@ pub fn get_credentials(api_config: &ApiConfig) {
     let code_verifier = CodeVerifier::generate_sha256();
     let client_id = &api_config.gmail.client_id;
     let params = hashmap! {
-        ("cliend_id", client_id.clone()),
+        ("client_id", client_id.clone()),
         ("response_type", "code".to_string()),
         (
             "scope",
