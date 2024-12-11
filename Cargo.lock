@@ -396,6 +396,7 @@ dependencies = [
  "rand",
  "reqwest",
  "serde",
+ "serde_json",
  "serde_yml",
  "tiny_http",
 ]
