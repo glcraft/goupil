@@ -13,6 +13,7 @@ fn make_oauth_server() -> (u16, Server) {
         .map(|port| (port, Server::http(format!("0.0.0.0:{}", port))))
         .find_map(|(port, res_server)| match res_server {
             Ok(server) => Some(Ok((port, server))),
+            Err(e) if e.to_string().contains("os error 98") => None,
             Err(e) => Some(Err(e)),
         })
         .expect("An error occured while making a server for oauth.")
@@ -103,10 +104,13 @@ pub fn get_token(host: &str, mut params: HashMap<&'static str, String>) -> OAuth
         .post(host)
         .form(&params)
         .send()
-        .expect("An error occured during token exchange");
-    let resp_text = resp.text();
-    println!("oauth token rew response: {:?}", resp_text);
-    todo!()
+        .expect("An error occured during token exchange")
+        .text()
+        .expect("oauth token: unable to parse text");
+    println!("json received: {}", resp);
+    let resp_json =
+        serde_json::from_str::<OAuth2TokenResponse>(&resp).expect("oauth token malformed");
+    resp_json.into()
     // let resp = resp_text
     //     .json::<OAuth2TokenResponse>()
     //     .expect("oauth2 token malformed response");
