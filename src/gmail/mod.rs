@@ -39,18 +39,17 @@ impl CodeVerifier {
         b64encoded.pop(); // drop the = fill
         b64encoded
     }
+    pub fn to_sha256(input: String) -> String {
+        let mut b64encoded = util::base64::url_encode(&util::sha::sha256(&input.into_bytes()));
+        b64encoded.pop(); // drop the = fill
+        b64encoded
+    }
 }
-// fn wait_oauth2() -> String {
-//     for port in 3000..3100 {
-//         match tiny_http::Server::http(format!("0.0.0.0:{}", port)) {
-//             Ok(server) => server,
-//             Err(tiny_http::)
-//         }
-//     }
-// }
-pub fn get_credentials(api_config: &ApiConfig) {
-    let code_verifier = CodeVerifier::generate_sha256();
+pub fn get_credentials(api_config: &ApiConfig) -> oauth2::OAuth2Token {
+    let code_verifier = CodeVerifier::generate();
+    let code_challenge = CodeVerifier::to_sha256(code_verifier.clone());
     let client_id = &api_config.gmail.client_id;
+    let oauth2 = oauth2::OAuth2::new();
     let params = hashmap! {
         ("client_id", client_id.clone()),
         ("response_type", "code".to_string()),
@@ -58,16 +57,17 @@ pub fn get_credentials(api_config: &ApiConfig) {
             "scope",
             "https://www.googleapis.com/auth/gmail.readonly".to_string(),
         ),
-        ("code_challenge", code_verifier.clone()),
+        ("code_challenge", code_challenge),
         ("code_challenge_method", "S256".to_string()),
     };
-    let code = oauth2::get_auth_code("https://accounts.google.com/o/oauth2/v2/auth", params);
+    let code = oauth2.get_auth_code("https://accounts.google.com/o/oauth2/v2/auth", params);
     let params = hashmap![
         ("code", code),
         ("client_id", client_id.clone()),
         ("client_secret", api_config.gmail.client_secret.clone()),
         ("code_verifier", code_verifier),
     ];
-    let token = oauth2::get_token("https://oauth2.googleapis.com/token", params);
-    println!("token: {:?}", token);
+    let token = oauth2.get_token("https://oauth2.googleapis.com/token", params);
+    log::trace!("tokan obtained: {:?}", token);
+    token
 }
