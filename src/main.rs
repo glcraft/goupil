@@ -8,6 +8,6 @@ mod terminal;
 mod util;
 
 fn main() {
-    let api_config = api::ApiConfig::load();
+    let api_config = secrets::ApiConfig::load();
     gmail::get_credentials(&api_config);
 }
