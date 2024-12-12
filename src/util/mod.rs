@@ -5,12 +5,15 @@ pub mod urlencode;
 #[macro_export]
 macro_rules! hashmap {
     ( $(($key:expr, $value:expr $(,)?)),+ $(,)? ) => {{
-        let mut hm = std::collections::HashMap::new();
+        hashmap!(std::collections::HashMap::new(), $(($key, $value)),*)
+    }};
+    ( $hm:expr, $(($key:expr, $value:expr $(,)?)),+ $(,)? ) => {{
+        let mut hm = $hm;
         $(
         hm.insert($key, $value);
         )+
         hm
-    }}
+    }};
 }
 
 #[inline]
