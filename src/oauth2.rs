@@ -1,10 +1,10 @@
 use crate::util::{self, urlencode::IntoUrlEncoded};
 use core::panic;
-use std::{collections::HashMap, process::Command};
+use std::{collections::HashMap, process::Command, str::FromStr};
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use tiny_http::Server;
+use tiny_http::{Header, Response, Server, StatusCode};
 
 /// Make a mini server for OAuth2 redirection
 fn make_oauth_server() -> (u16, Server) {
@@ -78,18 +78,28 @@ impl OAuth2 {
         let code = match self.server.recv() {
             Ok(req) => {
                 log::info!("server: request intercepted");
-                let url = req.url();
-                let params = util::urlencode::decode_url_parameters(url)
-                    .expect("no parameters obtained by oauth2 service");
-                if let Some(error) = params.get("error") {
-                    match error.as_str() {
-                        "access_denied" => panic!("The user denied the request."),
-                        e => panic!("An error happened while authentifying the user: {}", e),
+                let code = {
+                    let params = util::urlencode::decode_url_parameters(req.url())
+                        .expect("no parameters obtained by oauth2 service");
+                    if let Some(error) = params.get("error") {
+                        match error.as_str() {
+                            "access_denied" => panic!("The user denied the request."),
+                            e => panic!("An error happened while authentifying the user: {}", e),
+                        }
                     }
-                }
-                let code = params.get("code").expect("\"code\" donc exists");
+                    params.get("code").expect("\"code\" donc exists").clone()
+                };
                 log::trace!("code found: {}", code);
-                code.clone()
+                const HTML_OAUTH2_RESPONSE: &str = include_str!("oauth2_response.html");
+                req.respond(Response::new(
+                    StatusCode(200),
+                    unsafe { vec![Header::from_str("Content-Type: text/html").unwrap_unchecked()] },
+                    HTML_OAUTH2_RESPONSE.as_bytes(),
+                    None,
+                    None,
+                ))
+                .expect("unable to respond to request");
+                code
             }
             Err(e) => panic!("oauth client got an issue: {:?}", e),
         };
