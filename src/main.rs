@@ -1,6 +1,7 @@
 #![feature(ascii_char)]
 
 //mod commands;
+mod credentials;
 mod gmail;
 mod oauth2;
 mod secrets;
