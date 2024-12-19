@@ -1,12 +1,9 @@
-use crate::{
-    hashmap,
-    util::{self, urlencode::IntoUrlEncoded},
-};
+use crate::{self as util, hashmap, urlencode::IntoUrlEncoded};
 use core::panic;
 use std::{collections::HashMap, process::Command, str::FromStr};
 
 use chrono::{DateTime, Utc};
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use tiny_http::{Header, Response, Server, StatusCode};
 
 /// Make a mini server for OAuth2 redirection
@@ -57,7 +54,10 @@ fn open_url(url: &str) -> Result<(), &'static str> {
     } else if cfg!(target_os = "macos") {
         todo!();
     } else {
-        log::warn!("Unable to open an url in a browser with your device. Please open this url in a browser to connect : {}", url);
+        log::warn!(
+            "Unable to open an url in a browser with your device. Please open this url in a browser to connect : {}",
+            url
+        );
     }
     Err("unable to open url in a browser")
 }

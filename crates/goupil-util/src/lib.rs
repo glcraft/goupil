@@ -1,4 +1,7 @@
+#![feature(ascii_char)]
+
 pub mod base64;
+pub mod oauth2;
 pub mod sha;
 pub mod urlencode;
 

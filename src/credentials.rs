@@ -1,6 +1,6 @@
-use crate::oauth2;
+use goupil_util::oauth2;
 use serde::{Deserialize, Serialize};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::{fs, io};
 
 #[derive(Default, Clone)]

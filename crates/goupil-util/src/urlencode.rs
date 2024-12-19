@@ -1,7 +1,5 @@
-use crate::util;
+use crate::{likely, unlikely};
 use std::collections::HashMap;
-
-use reqwest::Url;
 
 trait IsUrlEncodeFriendly: Copy {
     fn is_urlencode_friendly(self) -> bool;
@@ -83,13 +81,13 @@ pub fn decode(input: &str) -> String {
             Some(c) => c,
             None => return String::from_utf8(output).expect("invalide string in url parameters"),
         };
-        if util::likely(c != '%') {
+        if likely(c != '%') {
             assert!(c.is_ascii(), "url only expect ascii characters");
             output.push(c as u8);
             continue;
         }
         let c = it.next().expect("expect a char here");
-        if util::unlikely(c == '%') {
+        if unlikely(c == '%') {
             output.push(c as u8);
             continue;
         }

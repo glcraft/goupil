@@ -1,5 +1,6 @@
-use crate::hashmap;
-use crate::{oauth2, secrets::ApiConfig, util};
+use crate::secrets::ApiConfig;
+use goupil_util::oauth2;
+use goupil_util::{self as util, hashmap};
 use rand::distributions::{DistString, Distribution};
 
 /// Code challeng generator

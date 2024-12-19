@@ -1,12 +1,8 @@
-#![feature(ascii_char)]
-
 mod commands;
 mod credentials;
 mod gmail;
-mod oauth2;
 mod secrets;
 mod terminal;
-mod util;
 
 use clap::Parser;
 
