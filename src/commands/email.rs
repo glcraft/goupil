@@ -1,13 +1,32 @@
-use crate::{commands::Command, terminal::ask_user};
 use clap::{Args, Subcommand};
 
-#[derive(Subcommand)]
-pub enum EmailCommands {
-    Unsubscribe(EmailUnsubscribe),
+use crate::terminal;
+
+#[derive(Args, Debug)]
+pub struct EmailArgs {
+    #[command(subcommand)]
+    pub command: EmailCommands,
 }
 
-#[derive(Args)]
-pub struct EmailUnsubscribe {}
+#[derive(Subcommand, Debug)]
+pub enum EmailCommands {
+    Unsubscribe(EmailUnsubscribeArgs),
+}
+
+impl EmailCommands {
+    pub fn run(&self) {
+        match self {
+            Self::Unsubscribe(c) => c.run(),
+            _ => unimplemented!("not implemented yet"),
+        }
+    }
+}
+
+/// Find and unsubscribe email subscriptions
+#[derive(Args, Debug)]
+pub struct EmailUnsubscribeArgs {
+    // email: String,
+}
 
 enum EmailKind {
     Gmail,
@@ -28,8 +47,13 @@ impl From<&String> for EmailKind {
     }
 }
 
-impl Command for EmailUnsubscribe {
-    fn run() {
-        let email = ask_user("Enter your email");
+impl EmailUnsubscribeArgs {
+    fn run(&self) {
+        const API: &[&str] = &["Google", "Microsoft"];
+        let api = terminal::choose("Choose API: ", API).expect("error whoile selecting api");
+        println!("api chosen: {}", API[api as usize]);
+
+        // let api_config = secrets::ApiConfig::load();
+        // gmail::get_credentials(&api_config);
     }
 }
