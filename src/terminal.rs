@@ -60,3 +60,34 @@ where
         return Ok(result - 1);
     }
 }
+
+pub fn choose_value<'a, C, S>(msg: impl Display, choices: &'a C) -> Result<&'a S, Error>
+where
+    C: AsRef<[S]>,
+    S: Display,
+{
+    let len = choices.as_ref().len();
+    let padding = len.ilog10();
+    loop {
+        for (i, v) in choices.as_ref().iter().enumerate().map(|(i, v)| (i + 1, v)) {
+            println!("{i: >0$}: {v}", padding as _);
+        }
+        print!("{msg}: ");
+        io::stdout().flush()?;
+        let mut user_choice = String::new();
+        io::stdin().read_line(&mut user_choice)?;
+        let result = match user_choice.trim().parse::<isize>() {
+            Ok(v) => v,
+            Err(e) if matches!(e.kind(), num::IntErrorKind::InvalidDigit) => {
+                println!("Bad number.");
+                continue;
+            }
+            e => e?,
+        };
+        if !(result >= 1 && result <= len as isize) {
+            println!("Wrong number. The number must be between 1 and {len} included.");
+            continue;
+        }
+        return Ok(&choices.as_ref()[result as usize - 1]);
+    }
+}
