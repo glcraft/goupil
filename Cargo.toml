@@ -14,3 +14,5 @@ serde_yml = "0.0.12"
 log = "0.4"
 simple_logger = "5.0"
 thiserror = "2"
+num = "0.4"
+strum = { version = "0.26", features = ["derive"] }
